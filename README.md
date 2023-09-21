@@ -18,7 +18,7 @@ To run the tests, install pytest using `pip install pytest`. Then run `pytest`.
 
 ## Installation on Windows and Mac
 
-First, wipe your hard drive and install Linux. Then proceed to follow the instructions in the previous section.
+First, wipe your hard drive and install GNU/Linux. Then proceed to follow the instructions in the previous section.
 
 Joking aside, you can probably get it working on Mac or Windows, but it hasn't been tested. The virtual environment should "just work", but graphviz might require separate installation on Windows. Mac will probably work with some kind of brew install graphviz, and otherwise the same instructions as Linux above.
 
