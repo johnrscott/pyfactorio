@@ -4,7 +4,7 @@ This repository contains a few scripts for calculating the number of assembling 
 
 ## Installation on Linux
 
-Make sure python and graphviz are installed is installed: `sudo apt install python3 python3-venv python3-pip libgraphiviz-dev`, and clone this repository. From the root directory, make a virtual environment and install the requirements as follows:
+Make sure python and graphviz are installed is installed: `sudo apt install python3 python3-venv python3-pip graphviz libgraphviz-dev`, and clone this repository. From the root directory, make a virtual environment and install the requirements as follows:
 
 ```bash
 python3 -m venv venv
