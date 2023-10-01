@@ -7,10 +7,10 @@ fonttools==4.42.1
 idna==3.4
 kiwisolver==1.4.5
 markdown-it-py==3.0.0
-matplotlib>=3.7.0
+matplotlib==3.8.0
 mdurl==0.1.2
 networkx==3.1
-numpy>=1.24.0
+numpy==1.26.0
 odfpy==1.4.1
 packaging==23.1
 pandas==2.1.0
