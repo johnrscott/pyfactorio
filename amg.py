@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 
 description = """
-Calculate the tree of assembling machine dependencies required to
-craft an item at a particular rate. The result is displayed as a tree
-showing how many assembling machines are required to make all the
-dependencies of the item, along with the output rate of all the
-intermediate steps. The program can be most simply invoked using
-./amt.py item; however, other arguments described below can be used to
-pick the desired output rate and the assembling machine type used.
+Calculate the graph of assembling machine dependencies required to
+craft an item at a particular rate. The result displays how many
+assembling machines are required to make all the dependencies of the
+item, along with the output rate of all the intermediate steps. The
+program can be most simply invoked using ./amg.py item; however, other
+arguments described below can be used to pick the desired output rate
+and the assembling machine type used.
 
 EXAMPLES
 
 # Make 25 yellow science per minute using assembling machine twos
-./amt.py -r 25 -m 2 utility_science_pack
+./amg.py -r 25 -m 2 utility_science_pack
 
 # Make productivity module twos out of circuits
-./amt.py -r 10 -i circuits.txt productivity_module_2
+./amg.py -r 10 -i circuits.txt productivity_module_2
 
 DETAIL
 
@@ -25,7 +25,7 @@ the names. This file must be present in the directory from where
 amt.py is invoked, otherwise you must pass the -f argument.
 
 The input items file (-i) specifies which items are considered inputs
-(i.e. not to be assembled). They will become leaf nodes of the tree,
+(i.e. not to be assembled). They will become source nodes of the graph,
 and are assumed to be supplied on belts (or similar) at the rate shown
 on the node. The default value is the raw_materials.txt file. The list
 should contain things like plates that do not require smelting etc. to
@@ -33,16 +33,24 @@ use in assembly machines. However, you can put higher-level items here
 (such as electronic_circuit) if you have a source of these items
 available.
 
-At each node of the tree, three pieces of information are shown: the
+At each node of the graph, three pieces of information are shown: the
 item being assembled is shown as an icon; the number of assembling
 machines required is shown in bold; and the output rate of this
 assembling machine is shown in items/second.
 
-The tree is calculated by assuming that assembling machines are
+By default, the entire dependency tree for each ingredient is shown on
+the graph, which results in a tree. This may lead to multiple
+instances of a particular recipe being shown. Pass the option -c to
+combine all instances of a recipe into one node (which transforms the
+tree into a graph); this shows the total number of assembling machines
+for each recipe, but omits information about how the items should be
+divided up in dependent items.
+
+The graph is calculated by assuming that assembling machines are
 directly connected together, and belts and pickers do not limit
 throughput between machines.
 
-The ratios shown in the tree are valid independent of the type of
+The ratios shown in the graph are valid independent of the type of
 assembling machine used; for example, using a single speed module in
 all the assembling machines will increase the output item rate by
 20%. However, this assumes that pickers and belts do not limit the
@@ -55,6 +63,7 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescri
 
 parser = argparse.ArgumentParser(description=description, formatter_class=CustomFormatter)
 parser.add_argument("item", help="the item to be assembled (snake_case, see resources_file for names)")
+parser.add_argument("-c", "--combine-assemblers", help="Add up all assemblers making each item", action="store_true")
 parser.add_argument("-r", "--rate", help="target item assembly rate, in items per minute", type=float, default=60)
 parser.add_argument("-m", "--assembling-machine", help="type of assembling machine used (0 (human); 1, 2, or 3)", choices=[0, 1, 2, 3], type=int, default=1)
 parser.add_argument("-i", "--inputs-file", help="relative path to the input items file", default="raw_materials.txt")
@@ -79,7 +88,7 @@ with open(args.inputs_file) as f:
 # Main plotting function to display an assembler tree (the tree of
 # assemblers required to produce item), along with the number of
 # assemblers shown next to each node (should be rounded up).
-from recipe import RecipeList, AssemblerTree
+from recipe import RecipeList, AssemblerTree, CombinedAssemblerGraph
 import matplotlib.pyplot as plt
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
@@ -87,8 +96,13 @@ from networkx.drawing.nx_agraph import graphviz_layout
 recipes = RecipeList(recipes_file)
 assembler_tree = AssemblerTree(item, desired_output_throughput, assembler_crafting_speed, recipes, inputs)
 
-G = assembler_tree.to_graph()
-pos = graphviz_layout(G, prog="dot")
+if args.combine_assemblers:
+    combined_assembler_tree = CombinedAssemblerGraph(assembler_tree)
+    G = combined_assembler_tree.to_graph()
+    pos = graphviz_layout(G, prog="dot")
+else:
+    G = assembler_tree.to_graph()
+    pos = graphviz_layout(G, prog="dot") # Dot is good for trees
 
 fig, ax = plt.subplots()
 plt.title(f"Asemblers required to achieve {60.0*desired_output_throughput} {item} per minute")
@@ -99,11 +113,11 @@ nx.draw_networkx(
     ax=ax,
     arrows=True,
     arrowstyle="-",
-    min_source_margin=15,
-    min_target_margin=15,
-    node_size=2000,
-    node_shape="d",
-    node_color="w",
+    #min_source_margin=30,
+    #min_target_margin=30,
+    #node_size=2000,
+    #node_shape="d",
+    #node_color="w",
     style="dashed",
     with_labels=False,
 )
@@ -129,8 +143,8 @@ for n in G.nodes:
     num_assemblers = G.nodes[n]["num_assemblers"]
     output_throughput = G.nodes[n]["output_throughput"]
     if num_assemblers != 0:
-        a.annotate(f"{num_assemblers:.1f}", xy=(0,0), xytext=(0,-50), fontsize=14, weight="bold")
-    a.annotate(f"{output_throughput:.2f}/s", xy=(0,0), xytext=(0,-20), fontsize=14)
+        a.annotate(f"{num_assemblers:.1f}", xy=(0,0), fontsize=10, weight="bold", horizontalalignment="center", verticalalignment="center")
+    a.annotate(f"{output_throughput:.2f}/s", xy=(0,0), fontsize=10, ha="center", va="center")
 
     a.axis("off")
 

@@ -157,6 +157,13 @@ class AssemblerTree:
     This is the tree of assemblers required to generate a particular throughput of
     item production at the top level. It is assumes all assemblers are the same kind.
     It is made from a RecipesList and a top-level item.
+
+    An AssemblerTree has the following attributes:
+    - item: the item name that this node makes
+    - output_throughput: the number of items per second that this node makes
+    - num_assemblers: the number of assemblers required at this node to sustain this throughput
+    - ingredients: a list of AssemblerTrees making dependencies of this item
+
     """
     def __init__(self, item, throughput, assembler_crafting_speed, recipes, raw_materials):
         self.item = item
@@ -224,7 +231,14 @@ class AssemblerTree:
     
     def to_graph(self, G = None):
         """
-        Convert the object to a networkx graph
+        Convert the object to a networkx graph. 
+
+        The function is recursive. On the way down the tree (which 
+        is a depth-first order), each ingredient (i.e. assembler node)
+        is assigned a number. On the way up, edges are assigned between
+        the node numbers. You cannot do this on the way down, because
+        you do not know what the node numbers, because the node numbers
+        of all the children of the current node are not known yet.
         """
 
         if G is None:
@@ -246,3 +260,87 @@ class AssemblerTree:
             return G
         else:
             return G, current_node_index
+
+class CombinedAssemblerGraph:
+    """
+    This is the tree of assemblers required to generate a particular throughput of
+    item production at the top level, but where resources only appear once in the tree.
+    Compared to AssemblerTree, this graph can contain cycles between the same resource
+    may be used to make two different items. 
+    """
+    def __init__(self, assembler_tree):
+
+        # A map from strings to a dictionary of node information
+        self.nodes = {}
+
+        # A set of edges -- pairs of the form (item_producer, item_consumer)
+        self.edges = set()
+
+        self.add_assembler_tree(assembler_tree)
+
+    def push_assembler_node(self, assembler_tree):
+        """
+        Add an assembler node (assembler_tree) to the nodes list. If there
+        is currently no node for this item, create one, give it the next
+        free node index, and save the assembler_tree data in it. If there 
+        is already a node, add in the num_assemblers and output_throughput.
+        """
+        item = assembler_tree.item
+        if item not in self.nodes:
+            self.nodes[item] = {
+                "num_assemblers": assembler_tree.num_assemblers,
+                "output_throughput": assembler_tree.output_throughput
+            }
+        else:
+            self.nodes[item]["num_assemblers"] += assembler_tree.num_assemblers
+            self.nodes[item]["output_throughput"] += assembler_tree.output_throughput
+        
+    def add_assembler_tree(self, assembler_tree):
+        """
+        Adds the nodes from an assembler tree to self.nodes, and 
+        adds edges to self.edges
+        """
+
+        # Save the assembler_tree as a node
+        self.push_assembler_node(assembler_tree)
+        
+        for ingredient_assembler_tree in assembler_tree.ingredients:
+
+            # Add edges from all ingredients to the parent node
+            self.edges.add((assembler_tree.item, ingredient_assembler_tree.item))
+            
+            self.add_assembler_tree(ingredient_assembler_tree)
+        
+    def __repr__(self):
+        """
+        Print the nodes and edges.
+        """
+        return f"Nodes: {self.nodes}, Edges:{self.edges}"
+
+    def to_graph(self):
+        """
+        Convert the graph to networkx for plotting
+        """
+        G = nx.DiGraph()
+
+        # Networkx labels by numbers, but our key is item name.
+        # Keep track of it here.
+        item_to_node_index = {}
+
+        for item, node in self.nodes.items():
+            num_assemblers = node["num_assemblers"]
+            output_throughput = node["output_throughput"]
+            next_index = len(item_to_node_index)
+            item_to_node_index[item] = next_index
+            G.add_node(next_index,
+                       item=item,
+                       icon=get_icon(item),
+                       num_assemblers=num_assemblers,
+                       output_throughput=output_throughput)
+
+        for (item_1, item_2) in self.edges:
+            index_1 = item_to_node_index[item_1]
+            index_2 = item_to_node_index[item_2]
+            G.add_edge(index_1, index_2)
+
+        return G
