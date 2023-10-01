@@ -1,0 +1,13 @@
+steel_plate
+iron_plate
+copper_plate
+coal
+stone
+stone_brick
+petroleum_gas
+heavy_oil
+water
+plastic_bar
+sulfur
+lubricant
+sulfuric_acid
