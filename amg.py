@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 description = """
 Calculate the graph of assembling machine dependencies required to
@@ -56,31 +56,53 @@ all the assembling machines will increase the output item rate by
 20%. However, this assumes that pickers and belts do not limit the
 output rate.
 """
-    
+
 import argparse
-class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+
+
+class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter,
+                      argparse.RawDescriptionHelpFormatter):
     pass
 
-parser = argparse.ArgumentParser(description=description, formatter_class=CustomFormatter)
-parser.add_argument("item", help="the item to be assembled (snake_case, see resources_file for names)")
-parser.add_argument("-c", "--combine-assemblers", help="Add up all assemblers making each item", action="store_true")
-parser.add_argument("-r", "--rate", help="target item assembly rate, in items per minute", type=float, default=60)
-parser.add_argument("-m", "--assembling-machine", help="type of assembling machine used (0 (human); 1, 2, or 3)", choices=[0, 1, 2, 3], type=int, default=1)
-parser.add_argument("-i", "--inputs-file", help="relative path to the input items file", default="raw_materials.txt")
-parser.add_argument("-f", "--recipes-file", help="relative path to the recipes file", default="factorio_recipes.ods")
+
+parser = argparse.ArgumentParser(description=description,
+                                 formatter_class=CustomFormatter)
+parser.add_argument(
+    "item",
+    help="the item to be assembled (snake_case, see resources_file for names)")
+parser.add_argument("-c",
+                    "--combine-assemblers",
+                    help="Add up all assemblers making each item",
+                    action="store_true")
+parser.add_argument("-r",
+                    "--rate",
+                    help="target item assembly rate, in items per minute",
+                    type=float,
+                    default=60)
+parser.add_argument(
+    "-m",
+    "--assembling-machine",
+    help="type of assembling machine used (0 (human); 1, 2, or 3)",
+    choices=[0, 1, 2, 3],
+    type=int,
+    default=1)
+parser.add_argument("-i",
+                    "--inputs-file",
+                    help="relative path to the input items file",
+                    default="raw_materials.txt")
+parser.add_argument("-f",
+                    "--recipes-file",
+                    help="relative path to the recipes file",
+                    default="factorio_recipes.ods")
 
 args = parser.parse_args()
-desired_output_throughput = args.rate/60.0
+desired_output_throughput = args.rate / 60.0
 item = args.item
 recipes_file = args.recipes_file
 
-assembler_crafting_speed_map = {
-    0: 1,
-    1: 0.5,
-    2: 0.75,
-    3: 1.25
-}
-assembler_crafting_speed = assembler_crafting_speed_map[args.assembling_machine]
+assembler_crafting_speed_map = {0: 1, 1: 0.5, 2: 0.75, 3: 1.25}
+assembler_crafting_speed = assembler_crafting_speed_map[
+    args.assembling_machine]
 
 with open(args.inputs_file) as f:
     inputs = f.read().splitlines()
@@ -94,7 +116,8 @@ import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 
 recipes = RecipeList(recipes_file)
-assembler_tree = AssemblerTree(item, desired_output_throughput, assembler_crafting_speed, recipes, inputs)
+assembler_tree = AssemblerTree(item, desired_output_throughput,
+                               assembler_crafting_speed, recipes, inputs)
 
 if args.combine_assemblers:
     combined_assembler_tree = CombinedAssemblerGraph(assembler_tree)
@@ -102,10 +125,12 @@ if args.combine_assemblers:
     pos = graphviz_layout(G, prog="dot")
 else:
     G = assembler_tree.to_graph()
-    pos = graphviz_layout(G, prog="dot") # Dot is good for trees
+    pos = graphviz_layout(G, prog="dot")  # Dot is good for trees
 
 fig, ax = plt.subplots()
-plt.title(f"Asemblers required to achieve {60.0*desired_output_throughput} {item} per minute")
+plt.title(
+    f"Asemblers required to achieve {60.0*desired_output_throughput} {item} per minute"
+)
 
 nx.draw_networkx(
     G,
@@ -143,8 +168,11 @@ for n in G.nodes:
     num_assemblers = G.nodes[n]["num_assemblers"]
     output_throughput = G.nodes[n]["output_throughput"]
     if num_assemblers != 0:
-        a.annotate(f"{num_assemblers:.1f}", xy=(32,0), fontsize=10, weight="bold")
-    a.annotate(f"{output_throughput:.2f}/s", xy=(64,64), fontsize=10)
+        a.annotate(f"{num_assemblers:.1f}",
+                   xy=(32, 0),
+                   fontsize=10,
+                   weight="bold")
+    a.annotate(f"{output_throughput:.2f}/s", xy=(64, 64), fontsize=10)
 
     a.axis("off")
 
