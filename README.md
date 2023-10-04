@@ -2,6 +2,12 @@
 
 This repository contains a few scripts for calculating the number of assembling machines required to make items at a particular throughput.
 
+## What does it do?
+
+Using a script called `amg.py` (assembler machine tree), you can view the tree of assembling dependencies required to make an item at a particular rate. For example, to make green science at 60 SPM, run `./amg.py logistic_science_pack`:
+
+![](res/green_science_example.png)
+
 ## Installation on Linux
 
 Make sure python (>= 3.9), graphviz and Qt are installed is installed: `sudo apt install python3 python3-venv python3-pip graphviz libgraphviz-dev qt5-default`, and clone this repository. From the root directory, make a virtual environment and install the requirements as follows:
