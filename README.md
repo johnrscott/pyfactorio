@@ -12,7 +12,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-After that, you can run use `./amt.py`, which shows the assembling machine dependency tree required to make an item at a certain rate. Run `./amt.py -h` to read how it works.
+After that, you can run use `./amg.py`, which shows the assembling machine dependency tree required to make an item at a certain rate. Run `./amg.py -h` to read how it works.
 
 To run the tests, install pytest using `pip install pytest`. Then run `pytest`.
 

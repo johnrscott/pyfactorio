@@ -117,7 +117,7 @@ nx.draw_networkx(
     #min_target_margin=30,
     #node_size=2000,
     #node_shape="d",
-    #node_color="w",
+    node_color="w",
     style="dashed",
     with_labels=False,
 )
@@ -143,8 +143,8 @@ for n in G.nodes:
     num_assemblers = G.nodes[n]["num_assemblers"]
     output_throughput = G.nodes[n]["output_throughput"]
     if num_assemblers != 0:
-        a.annotate(f"{num_assemblers:.1f}", xy=(0,0), fontsize=10, weight="bold", horizontalalignment="center", verticalalignment="center")
-    a.annotate(f"{output_throughput:.2f}/s", xy=(0,0), fontsize=10, ha="center", va="center")
+        a.annotate(f"{num_assemblers:.1f}", xy=(32,0), fontsize=10, weight="bold")
+    a.annotate(f"{output_throughput:.2f}/s", xy=(64,64), fontsize=10)
 
     a.axis("off")
 
