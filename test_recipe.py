@@ -21,28 +21,28 @@ raw_materials = [
 ### Test for raw materials
 
 def test_electronic_circuit_raw_material_counts():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     counts = recipes.get_raw_material_counts("electronic_circuit", raw_materials)
     assert counts == {"copper_plate": 1.5, "iron_plate": 1}
 
 def test_advanced_circuit_raw_material_counts():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     counts = recipes.get_raw_material_counts("advanced_circuit", raw_materials)
     assert counts == {"copper_plate": 5, "iron_plate": 2, "plastic_bar": 2}
 
 def test_processing_unit_raw_material_counts():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     counts = recipes.get_raw_material_counts("processing_unit", raw_materials)
     assert counts == {"copper_plate": 40, "iron_plate": 24, "plastic_bar": 4, "sulfuric_acid": 5}
 
 def test_flying_robot_frame_raw_material_counts():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     counts = recipes.get_raw_material_counts("flying_robot_frame", raw_materials)
     assert counts == {"copper_plate": 4.5, "iron_plate": 3, "steel_plate": 1,
                       "battery": 2, "electric_engine_unit": 1,}
 
 def test_production_science_raw_material_counts():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     counts = recipes.get_raw_material_counts("production_science_pack", raw_materials)
     assert counts == pytest.approx({"copper_plate": 57.5/3, "iron_plate": 32.5/3,
                                     "steel_plate": 25.0/3, "plastic_bar": 20.0/3,
@@ -51,7 +51,7 @@ def test_production_science_raw_material_counts():
 ### Tests for assemblers required
 
 def test_assemblers_required_for_automation_science_pack():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     recipe = recipes.get_recipe("automation_science_pack")
     # Using a human
     assert recipe.assemblers_required(10, 1) == 50
@@ -64,39 +64,39 @@ def test_assemblers_required_for_automation_science_pack():
 
     
 def test_assemblers_required_for_advanced_circuit():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     recipe = recipes.get_recipe("advanced_circuit")
     assert recipe.assemblers_required(0.5, 0.5) == 6
     assert recipe.assemblers_required(3, 0.5) == 36
     assert recipe.assemblers_required(1, 0.5) == 12
 
 def test_assemblers_required_for_copper_cable():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     recipe = recipes.get_recipe("copper_cable")
     assert recipe.assemblers_required(4, 1) == 1
     assert recipe.assemblers_required(63, 0.75) == 21
 
 ### Tests for number of ingredient assemblers
 def test_ingredient_assemblers_for_productivity_module():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     num_assemblers = recipes.ingredient_assemblers_per_recipe("productivity_module", 1, raw_materials)
     assert num_assemblers == pytest.approx({"electronic_circuit": 5.0/30 ,
                                             "advanced_circuit": 2})
 
 def test_ingredient_assemblers_for_logistic_science_pack():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     num_assemblers = recipes.ingredient_assemblers_per_recipe("logistic_science_pack", 0.5, raw_materials)
     assert num_assemblers == pytest.approx({"inserter": 1.0/12, "transport_belt": 1.0/12})
 
 def test_ingredient_assemblers_for_automation_science_pack():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     num_assemblers = recipes.ingredient_assemblers_per_recipe("automation_science_pack", 0.5, raw_materials)
     assert num_assemblers == pytest.approx({"iron_gear_wheel": 0.1})
 
 ### Test full assembler tree
 
 def test_military_science_pack_assembler_tree():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     assembler_tree = AssemblerTree("military_science_pack", 150.0/60, 1.25,
                                    recipes, raw_materials)
     # Taken from the factorio wiki
@@ -143,7 +143,7 @@ def test_military_science_pack_assembler_tree():
     
 
 def test_military_science_pack_total_raw_input_throughput():
-    recipes = RecipeList("factorio_resources.ods")
+    recipes = RecipeList("factorio_recipes.ods")
     assembler_tree = AssemblerTree("military_science_pack", 150.0/60, 1.25,
                                    recipes, raw_materials)
     # Taken from the factorio wiki

@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("-i",
                         "--inputs-file",
                         help="relative path to the input items file",
-                        default="raw_materials.txt")
+                        default="input_materials.txt")
     parser.add_argument("-f",
                         "--recipes-file",
                         help="relative path to the recipes file",
@@ -115,9 +115,12 @@ if __name__ == "__main__":
     item = args.item
     recipes_file = args.recipes_file
 
+    crafting_speeds = {}
     assembler_crafting_speed_map = {0: 1, 1: 0.5, 2: 0.75, 3: 1.25}
-    assembler_crafting_speed = assembler_crafting_speed_map[
-        args.assembling_machine]
+    crafting_speeds["assembler"] = assembler_crafting_speed_map[args.assembling_machine]
+
+    # @TODO Fix this pls.
+    crafting_speeds["furnace"] = 1
 
     with open(args.inputs_file) as f:
         inputs = f.read().splitlines()
@@ -129,7 +132,7 @@ if __name__ == "__main__":
 
     recipes = RecipeList(recipes_file)
     assembler_tree = CraftingTree(item, desired_output_throughput,
-                                   assembler_crafting_speed, recipes, inputs)
+                                  crafting_speeds, recipes, inputs)
 
     if args.combine_machines:
         combined_assembler_tree = CombinedCraftingGraph(assembler_tree)

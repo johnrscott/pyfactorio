@@ -49,3 +49,17 @@ First, wipe your hard drive and install GNU/Linux. Then proceed to follow the in
 
 Joking aside, you can probably get it working on Mac or Windows, but it hasn't been tested. The virtual environment should "just work", provided the python version is high enough, but graphviz and qt5 might require separate installation. Mac will probably work with some kind of brew install graphviz, and otherwise the same instructions as Linux above.
 
+# Reading the ods without a GUI
+This command produces a csv version, `factorio_recipes.csv`:
+```bash
+libreoffice --headless --convert-to csv factorio_recipes.ods
+```
+
+# TODO 
+
+- Add text output for summary
+- Add ceil to assembling machines 
+- Or minimal perfect ratio
+- Add interactive prompt (repl)
+- Add fluid recipes 
+

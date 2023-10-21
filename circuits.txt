@@ -1,3 +1,0 @@
-electronic_circuit
-advanced_circuit
-processing_unit

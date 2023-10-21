@@ -39,6 +39,8 @@ def lookupItemAliases(item):
         ('blueassembler'): 'assembling_machine_2',
         ('yellowassembler', 'green_assemmbler'): 'assembling_machine_3',
         #
+        ('plastic'): 'plastic_bar',
+        #
         ('redscience'): 'automation_science_pack',
         ('greenscience'): 'logistic_science_pack',
         ('greyscience'): 'military_science_pack',

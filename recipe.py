@@ -5,11 +5,6 @@ from icons import get_icon
 
 # Basically the everything file.
 
-# Smelters, crafting speed
-# stone furnace, 1
-#  steel furnaces, 2
-# electric furnaces, 2
-
 def scale_dictionary(d, scale):
     """
     Multiply all the values in dictionary d
@@ -37,12 +32,10 @@ class Recipe:
     """
 
     def __init__(self, item_dataframe):
-        """
-
-        """
         self.item = item_dataframe.iloc[0]["item"]
         self.num_produced = item_dataframe.iloc[0]["num_produced"]
-        self.handcraft_time = item_dataframe.iloc[0]["handcraft_time"]
+        self.time = item_dataframe.iloc[0]["time"]
+        self.produced_by = item_dataframe.iloc[0]["produced_by"]
 
         # dictionary mapping item name to number required
         self.ingredients = dict(
@@ -53,21 +46,23 @@ class Recipe:
         Get string representation
         """
         return (
-            f"Recipe for {self.num_produced} {self.item} in {self.handcraft_time}s, "
+            f"Recipe for {self.num_produced} {self.item} in {self.time}s, "
             + f"using {self.ingredients}")
 
-    def assemblers_required(self, throughput, assembler_crafting_speed=1):
+    def machines_required(self, desired_throughput, crafting_speed=1):
         """
-        Calculate the number of assemblers required to get throughput items/second
-        from this recipe. assembler_crafting_speed is 1 (for human), 0.5 for
-        assembly_machine_1, 0.75 for assembly_machine_2, and 1.25 for assembly_machine_3.
+        Calculate the number of machines required to get throughput items/second
+        from this recipe. crafting_speed is 1 (for human), 
+        0.5 assembly_machine_1, 0.75 assembly_machine_2, 1.25 assembly_machine_3
+        1 stone furnace, 2 steel furnaces, 2 electric furnace
+        1 chemical plant
+        1 oil refinery
 
         Note: modules change the crafting speed
         """
-        return throughput * self.recipe_time(
-            assembler_crafting_speed) / self.num_produced
+        return desired_throughput * self.recipe_time(crafting_speed) / self.num_produced
 
-    def recipe_time(self, assembler_crafting_speed):
+    def recipe_time(self, crafting_speed):
         """
         Calculate the time taken to run the recipe once. Depends on the
         crafting speed, which is:
@@ -78,7 +73,7 @@ class Recipe:
 
         Note: this is not necessarily the time to craft a single item (e.g. copper_cable)
         """
-        return self.handcraft_time / assembler_crafting_speed
+        return self.time / crafting_speed
 
 
 class RecipeList:
@@ -87,11 +82,10 @@ class RecipeList:
     operations
     """
 
-    def __init__(self, factorio_resources_ods):
-        factorio_resources = pd.read_excel(factorio_resources_ods,
-                                           engine="odf")
+    def __init__(self, factorio_recipes_csv):
+        factorio_recipes = pd.read_csv(factorio_recipes_csv)
         self.recipes = {}
-        for item, group in factorio_resources.groupby("item"):
+        for item, group in factorio_recipes.groupby("item"):
             self.recipes[item] = Recipe(group)
 
     def get_raw_material_counts(self, item, raw_materials):
@@ -148,20 +142,20 @@ class RecipeList:
                 f"Item {item} does not exist in the recipes list. Check the resources .ods file."
             )
 
-    def ingredient_assemblers_per_recipe(self, item, assembler_crafting_speed,
+    def ingredient_machines_per_recipe(self, item, crafting_speed,
                                          raw_materials):
         """
-        How many assemblers are required to sustain one assembly machine
+        How many machines are required to sustain one assembly machine
         continuously running the recipe to make item. Returns a dictionary
         mapping ingredient names to number of assembly machines.
 
-        Note: the assembler_crafting_speed does not actually matter currently, as
+        Note: the crafting_speed does not actually matter currently, as
         the same assembler is assumed for the item and the ingredients. Later, could
-        generalise to allow different assemblers.
+        generalise to allow different machines.
         """
         assembler_counts = {}
         item_recipe = self.get_recipe(item)
-        item_recipe_time = item_recipe.recipe_time(assembler_crafting_speed)
+        item_recipe_time = item_recipe.recipe_time(crafting_speed)
         for ingredient, num_required in item_recipe.ingredients.items():
             throughput = num_required / item_recipe_time
 
@@ -171,50 +165,50 @@ class RecipeList:
 
             ingredient_recipe = self.get_recipe(ingredient)
             assembler_counts[
-                ingredient] = ingredient_recipe.assemblers_required(
-                    throughput, assembler_crafting_speed)
+                ingredient] = ingredient_recipe.machines_required(
+                    throughput, crafting_speed)
         return assembler_counts
 
 
-class AssemblerTree:
+class CraftingTree:
     """
-    This is the tree of assemblers required to generate a particular throughput of
-    item production at the top level. It is assumes all assemblers are the same kind.
+    This is the tree of machines required to generate a particular throughput of
+    item production at the top level. It is assumes all machines are the same kind.
     It is made from a RecipesList and a top-level item.
 
-    An AssemblerTree has the following attributes:
+    An CraftingTree has the following attributes:
     - item: the item name that this node makes
     - output_throughput: the number of items per second that this node makes
-    - num_assemblers: the number of assemblers required at this node to sustain this throughput
-    - ingredients: a list of AssemblerTrees making dependencies of this item
+    - num_machines: the number of machines required at this node to sustain this throughput
+    - ingredients: a list of CraftingTrees making dependencies of this item
 
     """
 
-    def __init__(self, item, throughput, assembler_crafting_speed, recipes,
+    def __init__(self, item, throughput, crafting_speeds, recipes,
                  raw_materials):
         self.item = item
 
-        # If the item is a raw material, then set the number of assemblers to zero,
+        # If the item is a raw material, then set the number of machines to zero,
         # but still save the output throughput. This corresponds to the raw material
         # source throughput requirement
         self.output_throughput = throughput
         self.ingredients = []
         if item in raw_materials:
-            self.num_assemblers = 0
+            self.num_machines = 0
         else:
             item_recipe = recipes.get_recipe(item)
-            item_recipe_time = item_recipe.recipe_time(
-                assembler_crafting_speed)
-            self.num_assemblers = item_recipe.assemblers_required(
-                throughput, assembler_crafting_speed)
+            crafting_speed = crafting_speeds[item_recipe.produced_by]
+            item_recipe_time = item_recipe.recipe_time(crafting_speed)
+            self.num_machines = item_recipe.machines_required(
+                throughput, crafting_speed)
 
             # Now go through each ingredient working out its throughput requirement to sustain
             # item production
             for ingredient, num_required in item_recipe.ingredients.items():
-                ingredient_output_throughput = self.num_assemblers * num_required / item_recipe_time
-                ingredient_assembler_tree = AssemblerTree(
+                ingredient_output_throughput = self.num_machines * num_required / item_recipe_time
+                ingredient_assembler_tree = CraftingTree(
                     ingredient, ingredient_output_throughput,
-                    assembler_crafting_speed, recipes, raw_materials)
+                    crafting_speed, recipes, raw_materials)
                 self.ingredients.append(ingredient_assembler_tree)
 
     def is_raw_material(self):
@@ -240,7 +234,7 @@ class AssemblerTree:
     def to_dict(self):
         return {
             "item": self.item,
-            "assemblers": self.num_assemblers,
+            "machines": self.num_machines,
             "output_throughput": self.output_throughput,
             "ingredients": [i.to_dict() for i in self.ingredients]
         }
@@ -255,7 +249,7 @@ class AssemblerTree:
             next_node_index,
             item=self.item,
             icon=get_icon(self.item),
-            num_assemblers=self.num_assemblers,
+            num_machines=self.num_machines,
             output_throughput=self.output_throughput,
         )
         return next_node_index
@@ -293,11 +287,11 @@ class AssemblerTree:
             return G, current_node_index
 
 
-class CombinedAssemblerGraph:
+class CombinedCraftingGraph:
     """
-    This is the tree of assemblers required to generate a particular throughput of
+    This is the tree of machines required to generate a particular throughput of
     item production at the top level, but where resources only appear once in the tree.
-    Compared to AssemblerTree, this graph can contain cycles between the same resource
+    Compared to CraftingTree, this graph can contain cycles between the same resource
     may be used to make two different items.
     """
 
@@ -316,16 +310,16 @@ class CombinedAssemblerGraph:
         Add an assembler node (assembler_tree) to the nodes list. If there
         is currently no node for this item, create one, give it the next
         free node index, and save the assembler_tree data in it. If there
-        is already a node, add in the num_assemblers and output_throughput.
+        is already a node, add in the num_machines and output_throughput.
         """
         item = assembler_tree.item
         if item not in self.nodes:
             self.nodes[item] = {
-                "num_assemblers": assembler_tree.num_assemblers,
+                "num_machines": assembler_tree.num_machines,
                 "output_throughput": assembler_tree.output_throughput
             }
         else:
-            self.nodes[item]["num_assemblers"] += assembler_tree.num_assemblers
+            self.nodes[item]["num_machines"] += assembler_tree.num_machines
             self.nodes[item][
                 "output_throughput"] += assembler_tree.output_throughput
 
@@ -363,14 +357,14 @@ class CombinedAssemblerGraph:
         item_to_node_index = {}
 
         for item, node in self.nodes.items():
-            num_assemblers = node["num_assemblers"]
+            num_machines = node["num_machines"]
             output_throughput = node["output_throughput"]
             next_index = len(item_to_node_index)
             item_to_node_index[item] = next_index
             G.add_node(next_index,
                        item=item,
                        icon=get_icon(item),
-                       num_assemblers=num_assemblers,
+                       num_machines=num_machines,
                        output_throughput=output_throughput)
 
         for (item_1, item_2) in self.edges:
