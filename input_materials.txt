@@ -5,6 +5,3 @@ stone
 petroleum_gas
 heavy_oil
 water
-sulfur
-lubricant
-sulfuric_acid
