@@ -3,9 +3,10 @@
 from networkx.drawing.nx_agraph import graphviz_layout
 import networkx as nx
 import matplotlib.pyplot as plt
-from recipe import RecipeList, AssemblerTree, CombinedAssemblerGraph
+from recipe import RecipeList, CraftingTree, CombinedCraftingGraph
 from items import lookupItemAliases
 import argparse
+from pprint import pprint
 
 description = """
 Calculate the graph of assembling machine dependencies required to
@@ -27,7 +28,7 @@ EXAMPLES
 DETAIL
 
 Item names are specified using snake_case, for example
-logistic_science_pack.  See the factorio_resources.ods file for all
+logistic_science_pack.  See the factorio_recipes.csv file for all
 the names. This file must be present in the directory from where
 amt.py is invoked, otherwise you must pass the -f argument.
 
@@ -79,8 +80,8 @@ if __name__ == "__main__":
         help=
         "the item to be assembled (snake_case, see resources_file for names)")
     parser.add_argument("-c",
-                        "--combine-assemblers",
-                        help="Add up all assemblers making each item",
+                        "--combine-machines",
+                        help="Add up all machines making each item",
                         action="store_true")
     parser.add_argument("-r",
                         "--rate",
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     parser.add_argument("-f",
                         "--recipes-file",
                         help="relative path to the recipes file",
-                        default="factorio_recipes.ods")
+                        default="factorio_recipes.csv")
 
     # Try really hard
     try:
@@ -123,15 +124,15 @@ if __name__ == "__main__":
 
     item = lookupItemAliases(item)
     # Main plotting function to display an assembler tree (the tree of
-    # assemblers required to produce item), along with the number of
-    # assemblers shown next to each node (should be rounded up).
+    # machines required to produce item), along with the number of
+    # machines shown next to each node (should be rounded up).
 
     recipes = RecipeList(recipes_file)
-    assembler_tree = AssemblerTree(item, desired_output_throughput,
+    assembler_tree = CraftingTree(item, desired_output_throughput,
                                    assembler_crafting_speed, recipes, inputs)
 
-    if args.combine_assemblers:
-        combined_assembler_tree = CombinedAssemblerGraph(assembler_tree)
+    if args.combine_machines:
+        combined_assembler_tree = CombinedCraftingGraph(assembler_tree)
         G = combined_assembler_tree.to_graph()
         pos = graphviz_layout(G, prog="dot")
     else:
@@ -177,15 +178,21 @@ if __name__ == "__main__":
 
         a.imshow(G.nodes[n]["icon"])
 
-        num_assemblers = G.nodes[n]["num_assemblers"]
+        num_machines = G.nodes[n]["num_machines"]
         output_throughput = G.nodes[n]["output_throughput"]
-        if num_assemblers != 0:
-            a.annotate(f"{num_assemblers:.1f}",
+        if num_machines != 0:
+            a.annotate(f"{num_machines:.1f}",
                        xy=(32, 0),
                        fontsize=10,
                        weight="bold")
         a.annotate(f"{output_throughput:.2f}/s", xy=(64, 64), fontsize=10)
 
         a.axis("off")
+        
+    #  plt.show()
 
-    plt.show()
+    recipes = RecipeList(recipes_file)
+    counts = recipes.get_raw_material_counts(item, inputs)
+    print(item)
+    pprint(counts)
+
