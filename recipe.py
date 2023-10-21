@@ -3,6 +3,12 @@ import pandas as pd
 import networkx as nx
 from icons import get_icon
 
+# Basically the everything file.
+
+# Smelters, crafting speed
+# stone furnace, 1
+#  steel furnaces, 2
+# electric furnaces, 2
 
 def scale_dictionary(d, scale):
     """
