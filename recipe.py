@@ -208,7 +208,7 @@ class CraftingTree:
                 ingredient_output_throughput = self.num_machines * num_required / item_recipe_time
                 ingredient_assembler_tree = CraftingTree(
                     ingredient, ingredient_output_throughput,
-                    crafting_speed, recipes, raw_materials)
+                    crafting_speeds, recipes, raw_materials)
                 self.ingredients.append(ingredient_assembler_tree)
 
     def is_raw_material(self):

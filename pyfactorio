@@ -121,7 +121,8 @@ if __name__ == "__main__":
 
     # @TODO Fix this pls.
     crafting_speeds["furnace"] = 1
-
+    crafting_speeds["chemical_plant"] = 1
+    
     with open(args.inputs_file) as f:
         inputs = f.read().splitlines()
 
