@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     crafting_speeds = {}
     assembler_crafting_speed_map = {0: 1, 1: 0.5, 2: 0.75, 3: 1.25}
-    crafting_speeds["assembler"] = assembler_crafting_speed_map[args.assembling_machine]
+    crafting_speeds["assembling_machine"] = assembler_crafting_speed_map[args.assembling_machine]
 
     # @TODO Fix this pls.
     crafting_speeds["furnace"] = 1
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
         a.axis("off")
         
-    #  plt.show()
+    plt.show()
 
     recipes = RecipeList(recipes_file)
     counts = recipes.get_raw_material_counts(item, inputs)
